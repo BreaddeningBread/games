@@ -2422,7 +2422,7 @@ function PluginManager() {
     throw new Error('This is a static class');
 }
 
-PluginManager._path         = 'js/plugins/';
+PluginManager._path         = 'https://cdn.jsdelivr.net/gh/BreaddeningBread/heavenfordeath@main/www/js/plugins/';
 PluginManager._scripts      = [];
 PluginManager._errorUrls    = [];
 PluginManager._parameters   = {};
