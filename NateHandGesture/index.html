@@ -23,7 +23,7 @@
   </div>
   <script src="merger.js"></script>
   <script>
-    loadMergedGameData("Build/game.data.unityweb", 1, 3, (mergedUrl) => {
+    loadMergedGameData("Build/WebGL.data.unityweb", 1, 4, (mergedUrl) => {
       config.dataUrl = mergedUrl;
 
       createUnityInstance(document.querySelector("#unity-canvas"), config, function (progress) {
@@ -117,20 +117,25 @@
 
     loadingBar.style.display = "block";
 
-    var script = document.createElement("script");
-    script.src = loaderUrl;
-    script.onload = () => {
-      createUnityInstance(canvas, config, (progress) => {
-        progressBarFull.style.width = 100 * progress + "%";
-      }).then((unityInstance) => {
-        loadingBar.style.display = "none";
-      }).catch((message) => {
-        alert(message);
-      });
-    };
+    loadingBar.style.display = "block";
 
-    document.body.appendChild(script);
+    loadMergedGameData("Build/WebGL.data.unityweb", 1, 4, (mergedUrl) => {
+      config.dataUrl = mergedUrl;
 
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+          loadingBar.style.display = "none";
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+      document.body.appendChild(script);
+    });
+    
   </script>
 </body>
 
