@@ -11,9 +11,8 @@
   <script src="TemplateData/UnityProgress.js"></script>
   <script src="Build/UnityLoader.js"></script>
   <script src="merger.js"></script>
-  <script src="merger.js"></script>
   <script>
-    loadMergedGameData("Build/WebGL.data.unityweb", 1, 2, (mergedUrl) => {
+    loadMergedGameData("Build/Builds.data.unityweb", 1, 2, (mergedUrl) => {
       fetch("Build/Builds.json")
         .then(response => response.json())
         .then(buildConfig => {
@@ -25,9 +24,6 @@
           );
         });
     });
-  </script>
-  <script>
-    var unityInstance = UnityLoader.instantiate("unityContainer", "Build/Builds.json", { onProgress: UnityProgress });
   </script>
 </head>
 
