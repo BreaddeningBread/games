@@ -11,20 +11,27 @@
   <script src="TemplateData/UnityProgress.js"></script>
   <script src="Build/UnityLoader.js"></script>
   <script src="merger.js"></script>
-  <script>
-    loadMergedGameData("Build/Builds.data.unityweb", 1, 2, (mergedUrl) => {
-      fetch("Build/Builds.json")
-        .then(response => response.json())
-        .then(buildConfig => {
-          buildConfig.dataUrl = mergedUrl;
-          var unityInstance = UnityLoader.instantiate(
-            "unityContainer",
-            buildConfig,
-            { onProgress: UnityProgress }
-          );
-        });
-    });
-  </script>
+<script>
+  const BaseUrl = "https://cdn.jsdelivr.net/gh/BreaddeningBread/games@main/HinotoriRhythm/";
+  const TargetDataFile = "Builds.data.unityweb";
+  
+  loadMergedGameData(BaseUrl + "Build/" + TargetDataFile, 1, 2, (mergedUrl) => {
+    const originalOpen = XMLHttpRequest.prototype.open;
+    
+    XMLHttpRequest.prototype.open = function(method, url) {
+      if (typeof url === 'string' && url.indexOf(TargetDataFile) > -1) {
+        url = mergedUrl;
+      }
+      return originalOpen.apply(this, arguments);
+    };
+
+    window.unityInstance = UnityLoader.instantiate(
+      "unityContainer", 
+      BaseUrl + "Build/Builds.json", 
+      { onProgress: UnityProgress }
+    );
+  });
+</script>
 </head>
 
 <body>

@@ -120,10 +120,17 @@
 	<script src="merger.js"></script>
 	<script>
 		loadMergedGameData("index.pck", 1, 3, (mergedUrl) => {
-			config.dataUrl = mergedUrl;
+			var engineConfig = {
+				"args": [],
+				"canvas": document.querySelector("#canvas"),
+				"executable": "index",
+				"memory": 16777216,
+				"startup_scripts": [],
+				"mainPack": mergedUrl
+			};
 
-			createUnityInstance(document.querySelector("#unity-canvas"), config, function (progress) {
-			}).then((unityInstance) => {
+			var engine = Engine;
+			engine.startGame(engineConfig).then(() => {
 			});
 		});
 	</script>
@@ -217,19 +224,24 @@
 				}
 			} else {
 				setStatusMode('progress');
-				engine.startGame({
-					'onProgress': function (current, total) {
-						if (current > 0 && total > 0) {
-							statusProgress.value = current;
-							statusProgress.max = total;
-						} else {
-							statusProgress.removeAttribute('value');
-							statusProgress.removeAttribute('max');
-						}
-					},
-				}).then(() => {
-					setStatusMode('hidden');
-				}, displayFailureNotice);
+
+				// Fetch and merge the split pck chunks first, then start Godot
+				loadMergedGameData("index.pck", 1, 3, (mergedUrl) => {
+					engine.startGame({
+						'mainPack': mergedUrl,
+						'onProgress': function (current, total) {
+							if (current > 0 && total > 0) {
+								statusProgress.value = current;
+								statusProgress.max = total;
+							} else {
+								statusProgress.removeAttribute('value');
+								statusProgress.removeAttribute('max');
+							}
+						},
+					}).then(() => {
+						setStatusMode('hidden');
+					}, displayFailureNotice);
+				});
 			}
 		}());
 	</script>
