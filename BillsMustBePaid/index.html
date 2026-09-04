@@ -8,11 +8,9 @@
   <title>Rike Games | Bills Must Be Paid</title>
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="stylesheet" href="TemplateData/style.css">
-  <link rel="manifest" href="manifest.webmanifest">
 </head>
 
 <body>
-
 
   <div id="unity-container">
     <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
@@ -26,9 +24,25 @@
     </div>
     <div id="unity-warning"> </div>
   </div>
+<script type="text/javascript">
+  const checkInterval = setInterval(() => {
+    if (typeof UTF8ToString !== "undefined" && !UTF8ToString.__patched) {
+      const originalUTF8 = UTF8ToString;
+      window.UTF8ToString = function(ptr, maxBytesToRead) {
+        const str = originalUTF8(ptr, maxBytesToRead);
 
-
-
+        if (typeof str === "string") {
+          if (str.includes("file://") || str.includes("localhost") || str.includes("github.io")) {
+            return "https://billsmustbepaid.rikegames.com/";
+          }
+        }
+        return str;
+      };
+      window.UTF8ToString.__patched = true;
+      clearInterval(checkInterval);
+    }
+  }, 10);
+</script>
   <script>
     var container = document.querySelector("#unity-container");
     var canvas = document.querySelector("#unity-canvas");
@@ -100,7 +114,6 @@
     var buildUrl = "Build";
     var loaderUrl = buildUrl + "/a3281b84df56bd219fa7405ac5301400.loader.js";
 
-    // Split Part Fetching & Reassembly Function
     function fetchAndMergeParts(partUrls, mimeType) {
       return Promise.all(
         partUrls.map(url =>
@@ -136,17 +149,19 @@
           buildUrl + "/3eb7a21e48eb97d5ea88e1cd66e10dcf.wasm.br.part2"
         ];
 
-        // Fetch and assemble both files concurrently
         console.log("Reassembling split Unity binaries...");
-        const [dataBlobUrl, codeBlobUrl] = await Promise.all([
+
+        // Fetch framework + merged parts
+        const [dataBlobUrl, codeBlobUrl, frameworkBlobUrl] = await Promise.all([
           fetchAndMergeParts(dataParts, 'application/octet-stream'),
-          fetchAndMergeParts(codeParts, 'application/wasm')
+          fetchAndMergeParts(codeParts, 'application/wasm'),
+          fetchAndMergeParts([buildUrl + "/19f08e74d87f21ee171305fdb3dbf851.framework.js.br"], 'application/javascript')
         ]);
 
         var config = {
           arguments: [],
           dataUrl: dataBlobUrl,
-          frameworkUrl: buildUrl + "/19f08e74d87f21ee171305fdb3dbf851.framework.js.br",
+          frameworkUrl: frameworkBlobUrl,
           codeUrl: codeBlobUrl,
           streamingAssetsUrl: "StreamingAssets",
           companyName: "Rike Games",
@@ -163,15 +178,6 @@
           }).then((unityInstance) => {
             stopPhrases();
             loadingBar.style.display = "none";
-
-            try {
-              var payload = JSON.stringify({
-                t: "ok-" + Date.now(),
-                host: jsVerdict && jsVerdict.host || location.hostname,
-                ref: jsVerdict && jsVerdict.ref || (document.referrer || "")
-              });
-              unityInstance.SendMessage("RuntimeIntegrity", "SetJsVerdict", payload);
-            } catch (e) { }
 
             try {
               if (typeof ResizeObserver !== 'undefined') {
