@@ -220,37 +220,60 @@
 
   <script src="merger.js"></script>
 
-  <script>
-    if (navigator.serviceWorker) {
+<script>
+  if (navigator.serviceWorker) {
+    try {
       if (!navigator.serviceWorker.controller) {
-        navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'all' });
+        navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'all' })
+          .catch(err => console.warn("ServiceWorker skipped:", err));
       }
+    } catch (e) {
+      console.warn("ServiceWorker registration not supported in this environment:", e);
     }
+  }
 
-    const partFiles = [];
-    for (let i = 1; i <= 15; i++) {
-      partFiles.push("game.zip.part" + String(i).padStart(2, '0'));
-    }
+  const zipParts = [];
+  for (let i = 1; i <= 15; i++) {
+    zipParts.push("game.zip.part" + String(i).padStart(2, '0'));
+  }
 
-    mergeFiles(partFiles).then(function (mergedUrl) {
+  const wasmParts = [
+    "renpy.wasm.part1",
+    "renpy.wasm.part2"
+  ];
 
-      window.gameZipURL = mergedUrl;
+  Promise.all([
+    mergeFiles(zipParts),
+    mergeFiles(wasmParts)
+  ]).then(function ([mergedZipUrl, mergedWasmUrl]) {
+    
+    window.gameZipURL = mergedZipUrl;
+    window.renpyWasmURL = mergedWasmUrl;
 
-      const preScript = document.createElement('script');
-      preScript.src = "renpy-pre.js";
+    window.Module = window.Module || {};
+    const oldLocateFile = window.Module.locateFile;
+    window.Module.locateFile = function (path, scriptDirectory) {
+      if (path && path.endsWith('.wasm')) {
+        return mergedWasmUrl;
+      }
+      return oldLocateFile ? oldLocateFile(path, scriptDirectory) : scriptDirectory + path;
+    };
 
-      preScript.onload = () => {
-        const renpyScript = document.createElement('script');
-        renpyScript.async = true;
-        renpyScript.src = "renpy.js";
-        document.body.appendChild(renpyScript);
-      };
+    const preScript = document.createElement('script');
+    preScript.src = "renpy-pre.js";
 
-      document.body.appendChild(preScript);
-    }).catch(function (err) {
-      console.error("Failed to merge game parts:", err);
-    });
-  </script>
+    preScript.onload = () => {
+      const renpyScript = document.createElement('script');
+      renpyScript.async = true;
+      renpyScript.src = "renpy.js";
+      document.body.appendChild(renpyScript);
+    };
+
+    document.body.appendChild(preScript);
+  }).catch(function (err) {
+    console.error("Failed to merge game assets or WASM parts:", err);
+  });
+</script>
 </body>
 
 </html>
