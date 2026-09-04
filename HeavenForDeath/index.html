@@ -14,6 +14,14 @@
 </head>
 
 <body style="background-color: black; user-select: none;">
+    <script type="text/javascript">
+        const _Image = window.Image;
+        window.Image = function(w, h) {
+            const img = new _Image(w, h);
+            img.crossOrigin = "anonymous";
+            return img;
+        };
+    </script>
     <script type="text/javascript" src="js/libs/pixi.js"></script>
     <script type="text/javascript" src="js/libs/pixi-tilemap.js"></script>
     <script type="text/javascript" src="js/libs/pixi-picture.js"></script>
