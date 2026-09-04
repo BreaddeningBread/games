@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <base href="https://cdn.jsdelivr.net/gh/BreaddeningBread/games@main/BillsMustBePaid/">
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Rike Games | Bills Must Be Paid</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="stylesheet" href="TemplateData/style.css">
+  <link rel="manifest" href="manifest.webmanifest">
+</head>
+
+<body>
+
+
+  <div id="unity-container">
+    <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
+
+    <div id="unity-loading-bar">
+      <div id="unity-logo"></div>
+      <div id="unity-progress-bar-empty">
+        <div id="unity-progress-bar-full"></div>
+      </div>
+      <div id="loading-phrase">You have soo many unpaid bills...</div>
+    </div>
+    <div id="unity-warning"> </div>
+  </div>
+
+
+
+  <script>
+    var container = document.querySelector("#unity-container");
+    var canvas = document.querySelector("#unity-canvas");
+    var loadingBar = document.querySelector("#unity-loading-bar");
+    var progressBarFull = document.querySelector("#unity-progress-bar-full");
+    var warningBanner = document.querySelector("#unity-warning");
+    var phraseEl = document.querySelector("#loading-phrase");
+
+    // -----------------------------------------------------------
+    // Rotating loading phrases — fade+slide cross-cut under the bar.
+    // Fixed deterministic sequence; loops to start if loading takes
+    // longer than the full cycle. Stops when Unity finishes loading.
+    // -----------------------------------------------------------
+    var PHRASE_SEQUENCE = [
+      "You have soo many unpaid bills...",
+      "filling up your piggy banks...",
+      "Btw. we are Roxy & Mike, happy that you play our game",
+      "Leave your feedback in the comments or join our Discord",
+      "Just one more sec...",
+      "ok... now it should really start...",
+      "Piggy Banks are getting filthy",
+      "We hope you enjoy the game :))"
+    ];
+    var phraseIdx = 0;  // matches the static text in HTML
+    var phraseTimer = null;
+    var phraseStopped = false;
+
+    function rotatePhrase() {
+      if (phraseStopped) return;
+      phraseEl.classList.add("is-out");
+      setTimeout(function () {
+        if (phraseStopped) return;
+        phraseIdx = (phraseIdx + 1) % PHRASE_SEQUENCE.length;
+        phraseEl.textContent = PHRASE_SEQUENCE[phraseIdx];
+        phraseEl.classList.remove("is-out");
+        // Restart the in-animation
+        phraseEl.style.animation = "none";
+        void phraseEl.offsetWidth;
+        phraseEl.style.animation = "";
+        phraseTimer = setTimeout(rotatePhrase, 2600);
+      }, 320);
+    }
+
+    function stopPhrases() {
+      phraseStopped = true;
+      if (phraseTimer) { clearTimeout(phraseTimer); phraseTimer = null; }
+    }
+
+    phraseTimer = setTimeout(rotatePhrase, 2500);
+
+    function unityShowBanner(msg, type) {
+      function updateBannerVisibility() {
+        warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+      }
+      var div = document.createElement('div');
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+      if (type == 'error') div.style = 'background: red; padding: 10px;';
+      else {
+        if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+        setTimeout(function () {
+          warningBanner.removeChild(div);
+          updateBannerVisibility();
+        }, 5000);
+      }
+      updateBannerVisibility();
+    }
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/a3281b84df56bd219fa7405ac5301400.loader.js";
+
+    // Split Part Fetching & Reassembly Function
+    function fetchAndMergeParts(partUrls, mimeType) {
+      return Promise.all(
+        partUrls.map(url =>
+          fetch(url).then(res => {
+            if (!res.ok) throw new Error(`Failed to load ${url}: ${res.statusText}`);
+            return res.arrayBuffer();
+          })
+        )
+      ).then(buffers => {
+        let mergedBlob = new Blob(buffers, { type: mimeType });
+        return URL.createObjectURL(mergedBlob);
+      });
+    }
+
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+
+    async function bootUnity(jsVerdict) {
+      loadingBar.style.display = "flex";
+
+      try {
+        var dataParts = [
+          buildUrl + "/0dbfd54c24ae081a00bffe3dc0bd9e21.data.br.part1",
+          buildUrl + "/0dbfd54c24ae081a00bffe3dc0bd9e21.data.br.part2"
+        ];
+
+        var codeParts = [
+          buildUrl + "/3eb7a21e48eb97d5ea88e1cd66e10dcf.wasm.br.part1",
+          buildUrl + "/3eb7a21e48eb97d5ea88e1cd66e10dcf.wasm.br.part2"
+        ];
+
+        // Fetch and assemble both files concurrently
+        console.log("Reassembling split Unity binaries...");
+        const [dataBlobUrl, codeBlobUrl] = await Promise.all([
+          fetchAndMergeParts(dataParts, 'application/octet-stream'),
+          fetchAndMergeParts(codeParts, 'application/wasm')
+        ]);
+
+        var config = {
+          arguments: [],
+          dataUrl: dataBlobUrl,
+          frameworkUrl: buildUrl + "/19f08e74d87f21ee171305fdb3dbf851.framework.js.br",
+          codeUrl: codeBlobUrl,
+          streamingAssetsUrl: "StreamingAssets",
+          companyName: "Rike Games",
+          productName: "Bills Must Be Paid",
+          productVersion: "0.2.7.5.2",
+          showBanner: unityShowBanner,
+        };
+
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+          createUnityInstance(canvas, config, (progress) => {
+            progressBarFull.style.width = 100 * progress + "%";
+          }).then((unityInstance) => {
+            stopPhrases();
+            loadingBar.style.display = "none";
+
+            try {
+              var payload = JSON.stringify({
+                t: "ok-" + Date.now(),
+                host: jsVerdict && jsVerdict.host || location.hostname,
+                ref: jsVerdict && jsVerdict.ref || (document.referrer || "")
+              });
+              unityInstance.SendMessage("RuntimeIntegrity", "SetJsVerdict", payload);
+            } catch (e) { }
+
+            try {
+              if (typeof ResizeObserver !== 'undefined') {
+                var ro = new ResizeObserver(function () {
+                  try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+                });
+                ro.observe(container);
+              }
+              setTimeout(function () {
+                try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+              }, 150);
+              setTimeout(function () {
+                try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+              }, 600);
+            } catch (e) { }
+          }).catch((message) => {
+            stopPhrases();
+            console.error(message);
+          });
+        };
+        document.body.appendChild(script);
+
+      } catch (err) {
+        stopPhrases();
+        console.error("Error assembling split game files:", err);
+        unityShowBanner("Failed to load split game files.", "error");
+      }
+    }
+
+    bootUnity();
+  </script>
+</body>
+
+</html>

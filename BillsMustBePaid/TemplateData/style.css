@@ -1,0 +1,163 @@
+/* --- TemplateData/style.css --- */
+
+/* Lock html+body to viewport so position:fixed has a stable containing block.
+   Without this, portals that resize the iframe after first paint can leave
+   fixed elements (canvas, sitelock page) sized to the early viewport. */
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    padding: 0;
+    margin: 0;
+    /* A slightly darker background can look more modern */
+    background: #1a1a1a;
+  }
+  #unity-container {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  #unity-canvas {
+    /* !important defends against Unity's loader writing inline pixel sizes
+       on the canvas — keeps the display box tied to the container. */
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    background: #000;
+  }
+  #unity-warning {
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    transform: translate(-50%);
+    background: white;
+    padding: 10px;
+    display: none;
+  }
+
+  /* Centering the entire loading UI */
+  #unity-loading-bar {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    /* Final transform set via animation; keep the centering here as the base */
+    transform: translate(-50%, -50%);
+    display: none;
+    /* Align logo and bar vertically */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Slide-up entry — bar appears from a touch below center, then settles */
+    animation: loading-bar-slide-up .7s cubic-bezier(.2, .7, .2, 1) both;
+  }
+
+  @keyframes loading-bar-slide-up {
+    0%   { transform: translate(-50%, calc(-50% + 18px)); opacity: 0; }
+    100% { transform: translate(-50%, -50%);              opacity: 1; }
+  }
+
+  /* Logo styling — fades in just ahead of the bar's slide-up */
+  #unity-logo {
+    width: 154px;
+    height: 130px;
+    background: url('unity-logo-dark.png') no-repeat center;
+    margin-bottom: 20px; /* Add some space between logo and bar */
+    opacity: 0;
+    animation: logo-fade-in .9s ease-out .15s forwards;
+  }
+
+  @keyframes logo-fade-in {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  /* --- NEW POLISHED PROGRESS BAR --- */
+
+  /* 1. The "Empty" Bar (the track/background) */
+  #unity-progress-bar-empty {
+    /* Replace image with pure CSS */
+    width: 280px; /* A bit wider for a modern feel */
+    height: 12px;
+    margin: 0;
+    padding: 3px; /* Padding creates a nice border effect */
+    background-color: #2a2a2e; /* Dark background for the track */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.25) inset; /* Inner shadow for depth */
+  }
+
+  /* 2. The "Full" Bar (the actual progress) */
+  #unity-progress-bar-full {
+    /* Replace image with pure CSS */
+    width: 0%; /* Starts at 0, controlled by JS */
+    height: 100%;
+    margin: 0;
+    background: #FFB000; /* Brand amber/gold */
+    border-radius: 8px; /* Slightly smaller radius to fit inside the empty bar */
+
+    /* THIS IS THE KEY: Smoothly animate the width change over 0.3 seconds */
+    transition: width .3s ease-in-out;
+
+    /* --- The "Sheen" Effect (the "double" bar) --- */
+    position: relative;
+    overflow: hidden; /* Clips the sheen so it stays inside the bar */
+  }
+
+  /* 3. The Animated Sheen using a pseudo-element */
+  #unity-progress-bar-full::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%; /* The sheen is 50% of the bar's width */
+    height: 100%;
+
+    /* A semi-transparent white gradient creates the light effect */
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0) 100%);
+
+    /* Apply the animation */
+    animation: move-sheen 1.5s infinite linear;
+  }
+
+  /* 4. The Keyframes for the Sheen Animation */
+  @keyframes move-sheen {
+    0% {
+      transform: translateX(-150%); /* Start off-screen to the left */
+    }
+    100% {
+      transform: translateX(250%); /* End off-screen to the right */
+    }
+  }
+
+  /* --- Rotating loading phrases (under the bar) --- */
+  #loading-phrase {
+    margin-top: 18px;
+    /* Lock the line-box so swapping text never re-flows the layout */
+    min-height: 1.3em;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.72);
+    text-align: center;
+    white-space: nowrap;
+    /* Initial reveal — staggered behind logo + bar */
+    animation: phrase-in .55s ease-out .4s both;
+    will-change: opacity;
+    pointer-events: none;
+  }
+
+  #loading-phrase.is-out {
+    animation: phrase-out .32s ease-in forwards;
+  }
+
+  @keyframes phrase-in {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes phrase-out {
+    0%   { opacity: 1; }
+    100% { opacity: 0; }
+  }
