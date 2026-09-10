@@ -1,0 +1,27 @@
+(function () {
+  const currentHost = window.location.hostname || "localhost";
+  
+  const POLICY = {
+    EXACT_HOSTS: [
+      currentHost,
+      "",
+      "localhost", 
+      "127.0.0.1", 
+      "0.0.0.0", 
+      "::1", 
+      "billsmustbepaid.rikegames.com", 
+      "rikegames.com", 
+      "www.rikegames.com", 
+      "html-classic.itch.zone", 
+      "html.itch.zone"
+    ],
+    SUFFIX_HOSTS: [".itch.zone", ".armorgames.com", window.location.hostname],
+    REQUIRE_TOP_FRAME: [],
+    REFERRER_RULES: [],
+    CANONICAL_PRIMARY: "https://billsmustbepaid.rikegames.com",
+    CANONICAL_ITCH: "https://rikegames.itch.io",
+    CANONICAL_STEAM: "https://store.steampowered.com/app/4421010/Bills_Must_Be_Paid/",
+    POLICY_HASH: "f40db766fb1c0e18dbd20925704efd3ced4568461e2693be9a1cdbcdcb8bf16a"
+  };
+  window.__rg_policy = POLICY;
+})();

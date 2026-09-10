@@ -1,48 +1,111 @@
 <!DOCTYPE html>
 <html lang="en-us">
+ 
 
 <head>
   <base href="https://cdn.jsdelivr.net/gh/BreaddeningBread/games@main/BillsMustBePaid/">
+     
   <meta charset="utf-8">
+     
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>Rike Games | Bills Must Be Paid</title>
+      <title>Rike Games | Bills Must Be Paid</title>
+     
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
+     
   <link rel="stylesheet" href="TemplateData/style.css">
+     
+  <link rel="manifest" href="manifest.webmanifest">
+   
 </head>
+ 
 
 <body>
+      <!-- Sitelock: inline fail-closed renderer + gate placeholder. Defined BEFORE lock-policy.js
+         and lock.js load, so a missing/blocked external script still leaves a working block page. -->
+     
+  <script>
+    window.__rg_showBlockedPage = function (reason) {
+      // Keep these URLs in sync with Tools/Sitelock/policy.json _canonical_links.
+      var primary = "https://billsmustbepaid.rikegames.com";
+      var itch = "https://rikegames.itch.io";
+      var steam = "https://store.steampowered.com/app/4421010/Bills_Must_Be_Paid/";
+      var safeReason = String(reason || "").replace(/[^a-z0-9_-]/gi, "");
+      function btn(href, label) {
+        // target=_blank + rel=noopener guarantees the link works inside iframes (itch, etc.)
+        // where same-frame navigation to Steam/itch/rikegames may be blocked by X-Frame-Options.
+        return '<a href="' + href + '" target="_blank" rel="noopener noreferrer" ' +
+          'style="display:block;padding:14px 24px;' +
+          'background:transparent;color:#e8c46a;text-decoration:none;' +
+          'border:1px solid #c9a961;border-radius:4px;font-size:16px;font-weight:600;' +
+          'letter-spacing:0.2px;">' + label + '</a>';
+      }
+      var html =
+        '<div style="position:fixed;inset:0;background:#1a1a1a;color:#fff;' +
+        'font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;' +
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'padding:24px;text-align:center;z-index:2147483647;">' +
+        '<div style="background:#0d0d0d;border:1px solid rgba(232,196,106,0.35);' +
+        'border-radius:6px;padding:32px;max-width:600px;width:100%;' +
+        'box-shadow:0 4px 24px rgba(0,0,0,0.5);">' +
+        '<h1 style="font-size:28px;margin:0 0 18px 0;font-weight:700;color:#e8c46a;">' +
+        "This browser copy can't run here." +
+        '</h1>' +
+        '<p style="font-size:18px;margin:0 0 28px 0;line-height:1.5;color:#fff;">' +
+        "Play the official version of Bills Must Be Paid:" +
+        '</p>' +
+        '<div style="display:flex;flex-direction:column;gap:10px;">' +
+        btn(primary, primary) +
+        btn(itch, itch) +
+        btn(steam, "Steam") +
+        '</div>' +
+        '</div>' +
+        '<p style="font-size:12px;opacity:0.4;margin:24px 0 0 0;color:#fff;">' +
+        "Rike Games &middot; reason: " + safeReason +
+        '</p>' +
+        '</div>';
+      // Force html+body to fill viewport before innerHTML swap.
+      // Some portals iframe us at a tiny initial size; without this the
+      // sitelock div's position:fixed/inset:0 can render against a stale
+      // containing block and end up undersized in a corner until the
+      // user resizes the window (or fullscreens).
+      document.documentElement.style.cssText =
+        "width:100%;height:100%;margin:0;padding:0;background:#1a1a1a;";
+      document.body.style.cssText =
+        "width:100%;height:100%;margin:0;padding:0;";
+      document.body.innerHTML = html;
+      // Kick a layout pass shortly after — covers the iframe-resize-after-load race.
+      setTimeout(function () {
+        try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+      }, 100);
+      setTimeout(function () {
+        try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+      }, 600);
+      // Auto-redirect to primary canonical after 8s
+      setTimeout(function () { window.location.href = primary; }, 8000);
+    };
+    window.__rikeGate = function (_pass, fail) { fail("lock_missing"); };
+  </script>
+     
+  <script src="lock-policy.js"></script>
+     
+  <script src="lock.js"></script>
 
-  <div id="unity-container">
-    <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
+      <div id="unity-container">
+          <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
 
-    <div id="unity-loading-bar">
-      <div id="unity-logo"></div>
-      <div id="unity-progress-bar-empty">
-        <div id="unity-progress-bar-full"></div>
-      </div>
-      <div id="loading-phrase">You have soo many unpaid bills...</div>
-    </div>
-    <div id="unity-warning"> </div>
-  </div>
-<script type="text/javascript">
-  const checkInterval = setInterval(() => {
-    if (typeof UTF8ToString !== "undefined" && !UTF8ToString.__patched) {
-      const originalUTF8 = UTF8ToString;
-      window.UTF8ToString = function(ptr, maxBytesToRead) {
-        const str = originalUTF8(ptr, maxBytesToRead);
+          <div id="unity-loading-bar">
+              <div id="unity-logo"></div>
+              <div id="unity-progress-bar-empty">
+                  <div id="unity-progress-bar-full"></div>
+                </div>
+              <div id="loading-phrase">You have soo many unpaid bills...</div>
+            </div>
+          <div id="unity-warning"> </div>
+        </div>
 
-        if (typeof str === "string") {
-          if (str.includes("file://") || str.includes("localhost") || str.includes("github.io")) {
-            return "https://billsmustbepaid.rikegames.com/";
-          }
-        }
-        return str;
-      };
-      window.UTF8ToString.__patched = true;
-      clearInterval(checkInterval);
-    }
-  }, 10);
-</script>
+
+
+     
   <script>
     var container = document.querySelector("#unity-container");
     var canvas = document.querySelector("#unity-canvas");
@@ -66,7 +129,7 @@
       "Piggy Banks are getting filthy",
       "We hope you enjoy the game :))"
     ];
-    var phraseIdx = 0;  // matches the static text in HTML
+    var phraseIdx = 0;  // matches the static text in HTML
     var phraseTimer = null;
     var phraseStopped = false;
 
@@ -113,20 +176,17 @@
 
     var buildUrl = "Build";
     var loaderUrl = buildUrl + "/a3281b84df56bd219fa7405ac5301400.loader.js";
-
-    function fetchAndMergeParts(partUrls, mimeType) {
-      return Promise.all(
-        partUrls.map(url =>
-          fetch(url).then(res => {
-            if (!res.ok) throw new Error(`Failed to load ${url}: ${res.statusText}`);
-            return res.arrayBuffer();
-          })
-        )
-      ).then(buffers => {
-        let mergedBlob = new Blob(buffers, { type: mimeType });
-        return URL.createObjectURL(mergedBlob);
-      });
-    }
+    var config = {
+      arguments: [],
+      dataUrl: buildUrl + "/0dbfd54c24ae081a00bffe3dc0bd9e21.data.br",
+      frameworkUrl: buildUrl + "/19f08e74d87f21ee171305fdb3dbf851.framework.js.br",
+      codeUrl: buildUrl + "/3eb7a21e48eb97d5ea88e1cd66e10dcf.wasm.br",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "Rike Games",
+      productName: "Bills Must Be Paid",
+      productVersion: "0.2.7.5.2",
+      showBanner: unityShowBanner,
+    };
 
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
       var meta = document.createElement('meta');
@@ -135,80 +195,62 @@
       document.getElementsByTagName('head')[0].appendChild(meta);
     }
 
-    async function bootUnity(jsVerdict) {
+
+    function bootUnity(jsVerdict) {
       loadingBar.style.display = "flex";
 
-      try {
-        var dataParts = [
-          buildUrl + "/0dbfd54c24ae081a00bffe3dc0bd9e21.data.br.part1",
-          buildUrl + "/0dbfd54c24ae081a00bffe3dc0bd9e21.data.br.part2"
-        ];
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+          stopPhrases();
+          loadingBar.style.display = "none";
+          // Forward the JS-side gate verdict to C# RuntimeIntegrity (cross-checks host/referrer).
+          try {
+            var payload = JSON.stringify({
+              t: "ok-" + Date.now(),
+              host: jsVerdict && jsVerdict.host || location.hostname,
+              ref: jsVerdict && jsVerdict.ref || (document.referrer || "")
+            });
+            unityInstance.SendMessage("RuntimeIntegrity", "SetJsVerdict", payload);
+          } catch (e) { /* C# side will time out and show overlay if not received */ }
 
-        var codeParts = [
-          buildUrl + "/3eb7a21e48eb97d5ea88e1cd66e10dcf.wasm.br.part1",
-          buildUrl + "/3eb7a21e48eb97d5ea88e1cd66e10dcf.wasm.br.part2"
-        ];
-
-        console.log("Reassembling split Unity binaries...");
-
-        // Fetch framework + merged parts
-        const [dataBlobUrl, codeBlobUrl, frameworkBlobUrl] = await Promise.all([
-          fetchAndMergeParts(dataParts, 'application/octet-stream'),
-          fetchAndMergeParts(codeParts, 'application/wasm'),
-          fetchAndMergeParts([buildUrl + "/19f08e74d87f21ee171305fdb3dbf851.framework.js.br"], 'application/javascript')
-        ]);
-
-        var config = {
-          arguments: [],
-          dataUrl: dataBlobUrl,
-          frameworkUrl: frameworkBlobUrl,
-          codeUrl: codeBlobUrl,
-          streamingAssetsUrl: "StreamingAssets",
-          companyName: "Rike Games",
-          productName: "Bills Must Be Paid",
-          productVersion: "0.2.7.5.2",
-          showBanner: unityShowBanner,
-        };
-
-        var script = document.createElement("script");
-        script.src = loaderUrl;
-        script.onload = () => {
-          createUnityInstance(canvas, config, (progress) => {
-            progressBarFull.style.width = 100 * progress + "%";
-          }).then((unityInstance) => {
-            stopPhrases();
-            loadingBar.style.display = "none";
-
-            try {
-              if (typeof ResizeObserver !== 'undefined') {
-                var ro = new ResizeObserver(function () {
-                  try { window.dispatchEvent(new Event('resize')); } catch (e) { }
-                });
-                ro.observe(container);
-              }
-              setTimeout(function () {
+          // Iframe-resize race fix: portals (CrazyGames, Poki, etc.) often
+          // resize the iframe AFTER our page has loaded. Unity's loader
+          // listens for window 'resize' to re-measure the canvas, but if the
+          // portal sizes us via iframe attribute changes the inner window
+          // doesn't always fire one. ResizeObserver on the container catches
+          // every size change regardless of source — we forward it as a
+          // synthetic resize so Unity rebuilds its framebuffer correctly.
+          try {
+            if (typeof ResizeObserver !== 'undefined') {
+              var ro = new ResizeObserver(function () {
                 try { window.dispatchEvent(new Event('resize')); } catch (e) { }
-              }, 150);
-              setTimeout(function () {
-                try { window.dispatchEvent(new Event('resize')); } catch (e) { }
-              }, 600);
-            } catch (e) { }
-          }).catch((message) => {
-            stopPhrases();
-            console.error(message);
-          });
-        };
-        document.body.appendChild(script);
-
-      } catch (err) {
-        stopPhrases();
-        console.error("Error assembling split game files:", err);
-        unityShowBanner("Failed to load split game files.", "error");
-      }
+              });
+              ro.observe(container);
+            }
+            // Belt-and-braces: kick once shortly after boot to defeat the
+            // initial-load race even if no further resize ever fires.
+            setTimeout(function () {
+              try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+            }, 150);
+            setTimeout(function () {
+              try { window.dispatchEvent(new Event('resize')); } catch (e) { }
+            }, 600);
+          } catch (e) { /* non-fatal */ }
+        }).catch((message) => {
+          stopPhrases();
+          console.error(message);
+        });
+      };
+      document.body.appendChild(script);
     }
 
-    bootUnity();
+    window.__rikeGate(bootUnity, window.__rg_showBlockedPage);
   </script>
+   
 </body>
 
 </html>
