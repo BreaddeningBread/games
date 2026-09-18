@@ -1,0 +1,14 @@
+{
+"companyName": "DefaultCompany",
+"productName": "FlyCarStunt5",
+"dataUrl": "FlyCarStunt5.data.unityweb",
+"wasmCodeUrl": "FlyCarStunt5.wasm.code.unityweb",
+"wasmFrameworkUrl": "FlyCarStunt5.wasm.framework.unityweb",
+"TOTAL_MEMORY": 268435456,
+"graphicsAPI": ["WebGL 2.0", "WebGL 1.0"],
+"webglContextAttributes": {"preserveDrawingBuffer": false},
+"backgroundUrl": "FlyCarStunt5.jpg",
+"splashScreenStyle": "Dark",
+"backgroundColor": "#FFFFFF",
+"cacheControl": {"default": "must-revalidate"}
+}
