@@ -4,7 +4,7 @@ function mergeFiles(fileParts) {
 
         function fetchPart(index) {
             if (index >= fileParts.length) {
-                let mergedBlob = new Blob(buffers);
+                let mergedBlob = new Blob(buffers, { type: "application/octet-stream" });
                 let mergedFileUrl = URL.createObjectURL(mergedBlob);
                 resolve(mergedFileUrl);
                 return;
