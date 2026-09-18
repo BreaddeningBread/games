@@ -5,15 +5,29 @@ function mergeFiles(fileParts) {
         function fetchPart(index) {
             if (index >= fileParts.length) {
                 let mergedBlob = new Blob(buffers, { type: "application/octet-stream" });
-                let mergedFileUrl = URL.createObjectURL(mergedBlob);
-                resolve(mergedFileUrl);
+                let reader = new FileReader();
+                reader.onloadend = function () {
+                    resolve(reader.result);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(mergedBlob);
                 return;
             }
-            fetch(fileParts[index]).then((response) => response.arrayBuffer()).then((data) => {
-                buffers.push(data);
-                fetchPart(index + 1);
-            }).catch(reject);
+
+            fetch(fileParts[index])
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status} loading ${fileParts[index]}`);
+                    }
+                    return response.arrayBuffer();
+                })
+                .then((data) => {
+                    buffers.push(data);
+                    fetchPart(index + 1);
+                })
+                .catch(reject);
         }
+
         fetchPart(0);
     });
 }
@@ -27,9 +41,11 @@ function getParts(file, start, end) {
 }
 
 function loadMergedGameData(basePath, start, end, callback) {
-    Promise.all([
-        mergeFiles(getParts(basePath, start, end))
-    ]).then(([mergedUrl]) => {
-        callback(mergedUrl);
-    });
+    mergeFiles(getParts(basePath, start, end))
+        .then((dataUri) => {
+            callback(dataUri);
+        })
+        .catch((err) => {
+            console.error("Error merging game files:", err);
+        });
 }
