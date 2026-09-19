@@ -3,7 +3,11 @@ function mergeFiles(fileParts) {
         let buffers = [];
 
         function fetchPart(index) {
+
             if (index >= fileParts.length) {
+                let mergedBlob = new Blob(buffers, { type: "application/octet-stream" });
+                let mergedFileUrl = URL.createObjectURL(mergedBlob);
+                resolve(mergedFileUrl);
                 let totalLength = buffers.reduce((acc, buf) => acc + buf.byteLength, 0);
                 let mergedBuffer = new Uint8Array(totalLength);
                 let offset = 0;
@@ -15,6 +19,10 @@ function mergeFiles(fileParts) {
                 resolve(mergedBuffer.buffer);
                 return;
             }
+            fetch(fileParts[index]).then((response) => response.arrayBuffer()).then((data) => {
+                buffers.push(data);
+                fetchPart(index + 1);
+            }).catch(reject);
 
             fetch(fileParts[index])
                 .then((response) => {
@@ -34,15 +42,12 @@ function mergeFiles(fileParts) {
     });
 }
 
-function getParts(file, start, end) {
-    let parts = [];
-    for (let i = start; i <= end; i++) {
-        parts.push(file + ".part" + i);
-    }
-    return parts;
-}
-
 function loadMergedGameData(basePath, start, end, callback) {
+    Promise.all([
+        mergeFiles(getParts(basePath, start, end))
+    ]).then(([mergedUrl]) => {
+        callback(mergedUrl);
+    });
     mergeFiles(getParts(basePath, start, end))
         .then((mergedArrayBuffer) => {
             callback(mergedArrayBuffer);
@@ -51,4 +56,3 @@ function loadMergedGameData(basePath, start, end, callback) {
             console.error("Error merging game files:", err);
         });
 }
-
