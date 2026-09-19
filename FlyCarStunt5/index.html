@@ -12,30 +12,17 @@
     <script src="Build/UnityLoader.js"></script>
     <script src="merger.js"></script>
     <script>
-        loadMergedGameData("Build/FlyCarStunt5.data.unityweb", 1, 2, (mergedUrl) => {
-            var origOpen = XMLHttpRequest.prototype.open;
-            XMLHttpRequest.prototype.open = function (method, url) {
-                if (typeof url === "string" && url.includes("blob:")) {
-                    url = url.substring(url.indexOf("blob:"));
-                }
-                return origOpen.call(this, method, url);
-            };
+        loadMergedGameData("Build/FlyCarStunt5.data.unityweb", 1, 2, (mergedurl) => {
 
             var gameInstance = UnityLoader.instantiate(
                 "gameContainer",
                 "Build/FlyCarStunt5.json",
                 {
                     onProgress: UnityProgress,
-                    dataUrl: mergedUrl,
-                    cachingAsync: false,
-                    Module: {
-                        dataUrl: mergedUrl,
-                        decompress: {
-                            "FlyCarStunt5.data.unityweb": false
-                        }
-                    }
+                    dataUrl: mergedurl
                 }
             );
+            
 
         });
     </script>
